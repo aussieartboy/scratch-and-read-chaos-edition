@@ -1,4 +1,4 @@
-const CACHE_NAME = "scratch-and-read-chaos-v6";
+const CACHE_NAME = "scratch-and-read-chaos-v7";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -6,6 +6,7 @@ const APP_SHELL = [
   "./app.js",
   "./manifest.webmanifest",
   "./assets/scratch-and-read.jpg",
+  "./assets/scratch-and-read-mobile.png",
   "./assets/icon-192.svg",
   "./assets/icon-512.svg",
 ];

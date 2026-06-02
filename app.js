@@ -1,6 +1,9 @@
 const IMAGE_WIDTH = 1536;
 const IMAGE_HEIGHT = 864;
 const COIN_RADIUS = 28;
+const MOBILE_IMAGE_WIDTH = 853;
+const MOBILE_IMAGE_HEIGHT = 1844;
+const MOBILE_COIN_RADIUS = 32;
 const SCRATCH_THRESHOLD = 0.5;
 const STORAGE_KEY = "scratch-and-read-chaos-progress-v1";
 
@@ -8,7 +11,45 @@ const STORAGE_KEY = "scratch-and-read-chaos-progress-v1";
 // Apocalypse / Zombie Chaos section lists five books, but the supplied
 // coordinate set has only four visible circles there. Set this to true to
 // render an estimated fifth synthetic coin for that section.
-const SHOW_SYNTHETIC_MISSING_ZOMBIE_COIN = false;
+const SHOW_SYNTHETIC_MISSING_ZOMBIE_COIN = true;
+
+const mobileCoinPositions = {
+  fantasy: [
+    [68.7, 505.7],
+    [145.2, 506.0],
+    [220.9, 505.8],
+    [296.7, 505.7],
+    [369.7, 505.9],
+  ],
+  rh: [
+    [478.3, 505.7],
+    [553.3, 505.6],
+    [629.6, 505.6],
+    [704.5, 505.8],
+    [779.8, 505.6],
+  ],
+  zombie: [
+    [68.1, 899.9],
+    [145.1, 899.9],
+    [220.3, 900.2],
+    [295.8, 900.2],
+    [369.3, 900.4],
+  ],
+  monster: [
+    [477.4, 899.4],
+    [551.6, 899.4],
+    [627.6, 899.5],
+    [703.5, 899.6],
+    [780.1, 899.5],
+  ],
+  comfort: [
+    [69.6, 1266.1],
+    [150.9, 1266.0],
+    [233.2, 1266.3],
+    [315.3, 1266.4],
+    [396.7, 1266.1],
+  ],
+};
 
 // Adjust scratch zone coordinates here. x/y/r are in pixels relative to the
 // original 1536 x 864 artwork and are converted to percentages at render time.
@@ -17,7 +58,7 @@ const categories = [
     key: "fantasy",
     label: "Fantasy / Badass FMC",
     color: "#a855f7",
-    crop: { x: 14, y: 244, width: 326, height: 306 },
+    mobileCrop: { x: 8, y: 380, width: 407, height: 355 },
     books: [
       ["bonds-that-tie", "The Bonds That Tie", 49, 353],
       ["kate-daniels", "Kate Daniels", 109, 353],
@@ -30,7 +71,7 @@ const categories = [
     key: "rh",
     label: "RH / Found Family Chaos",
     color: "#ff4aa2",
-    crop: { x: 329, y: 244, width: 314, height: 306 },
+    mobileCrop: { x: 427, y: 380, width: 407, height: 355 },
     books: [
       ["all-the-pretty-monsters", "All the Pretty Monsters", 369, 353],
       ["ruthless-boys", "Ruthless Boys of the Zodiac", 426, 353],
@@ -43,7 +84,7 @@ const categories = [
     key: "zombie",
     label: "Apocalypse / Zombie Chaos",
     color: "#8bdc42",
-    crop: { x: 631, y: 244, width: 292, height: 306 },
+    mobileCrop: { x: 8, y: 760, width: 407, height: 360 },
     books: [
       ["zombie-fallout", "Zombie Fallout", 677, 353],
       ["adrians-undead-diary", "Adrian's Undead Diary", 739, 353],
@@ -55,7 +96,7 @@ const categories = [
     key: "monster",
     label: "Supernatural / Monster Hunters",
     color: "#38dce8",
-    crop: { x: 896, y: 244, width: 320, height: 306 },
+    mobileCrop: { x: 427, y: 760, width: 407, height: 360 },
     books: [
       ["dresden-files", "The Dresden Files", 945, 353],
       ["cal-leandros", "Cal Leandros", 1002, 353],
@@ -68,7 +109,7 @@ const categories = [
     key: "comfort",
     label: "Weird Comfort Chaos",
     color: "#f2b84b",
-    crop: { x: 1200, y: 270, width: 322, height: 282 },
+    mobileCrop: { x: 8, y: 1138, width: 445, height: 345 },
     books: [
       ["murderbot-diaries", "Murderbot Diaries", 1251, 368],
       ["good-omens", "Good Omens", 1310, 368],
@@ -82,28 +123,32 @@ const categories = [
 if (SHOW_SYNTHETIC_MISSING_ZOMBIE_COIN) {
   categories
     .find((category) => category.key === "zombie")
-    .books.push(["dungeon-crawler-carl", "Dungeon Crawler Carl", 902, 353, true]);
+    .books.push(["dungeon-crawler-carl", "Dungeon Crawler Carl", 907, 353, true]);
 }
 
 const coins = categories.flatMap((category) =>
-  category.books.map(([id, title, x, y, synthetic = false]) => ({
+  category.books.map(([id, title, x, y, synthetic = false], index) => {
+    const [mobileX, mobileY] = mobileCoinPositions[category.key][index];
+    return {
     id: `${category.key}-${id}`,
     title,
     category: category.label,
+    categoryKey: category.key,
     color: category.color,
     x,
     y,
+    mobileX,
+    mobileY,
     r: COIN_RADIUS,
     synthetic,
-  })),
+    };
+  }),
 );
 
 const scratchLayer = document.querySelector("#scratchLayer");
 const progressText = document.querySelector("#progressText");
 const resetButton = document.querySelector("#resetButton");
 const markAllButton = document.querySelector("#markAllButton");
-const exportButton = document.querySelector("#exportButton");
-const importInput = document.querySelector("#importInput");
 const artwork = document.querySelector("#artwork");
 const missingArtworkNotice = document.querySelector("#missingArtworkNotice");
 const categoryRail = document.querySelector("#categoryRail");
@@ -137,45 +182,9 @@ markAllButton.addEventListener("click", () => {
   coins.forEach((coin) => completeCoin(coin.id));
 });
 
-exportButton.addEventListener("click", () => {
-  const payload = {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    completed: [...state.completed],
-  };
-  const blob = new Blob([JSON.stringify(payload, null, 2)], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "scratch-and-read-progress.json";
-  link.click();
-  URL.revokeObjectURL(url);
-});
-
-importInput.addEventListener("change", async (event) => {
-  const [file] = event.target.files;
-  if (!file) return;
-
-  try {
-    const data = JSON.parse(await file.text());
-    const imported = Array.isArray(data.completed) ? data.completed : [];
-    const validIds = new Set(coins.map((coin) => coin.id));
-    state.completed = new Set(imported.filter((id) => validIds.has(id)));
-    saveProgress();
-    renderCoins();
-    updateProgressText();
-  } catch {
-    window.alert("That progress file could not be imported.");
-  } finally {
-    importInput.value = "";
-  }
-});
-
 function renderCoins() {
   scratchLayer.replaceChildren(...coins.map((coin) => createCoinElement(coin)));
-  renderMobileCategories();
+  renderMobileBoard();
 }
 
 function renderCategoryRail() {
@@ -194,7 +203,7 @@ function renderCategoryRail() {
   categoryRail.replaceChildren(...buttons);
 }
 
-function renderMobileCategories() {
+function renderMobileBoard() {
   if (!mobileBoard) return;
 
   const cards = categories.map((category) => {
@@ -208,22 +217,22 @@ function renderMobileCategories() {
 
     const crop = document.createElement("div");
     crop.className = "mobile-crop";
-    crop.style.aspectRatio = `${category.crop.width} / ${category.crop.height}`;
+    crop.style.aspectRatio = `${category.mobileCrop.width} / ${category.mobileCrop.height}`;
 
     const cropImage = document.createElement("img");
-    cropImage.src = "assets/scratch-and-read.jpg";
+    cropImage.src = "assets/scratch-and-read-mobile.png";
     cropImage.alt = "";
     cropImage.setAttribute("aria-hidden", "true");
     cropImage.draggable = false;
-    cropImage.style.width = `${(IMAGE_WIDTH / category.crop.width) * 100}%`;
-    cropImage.style.left = `${(-category.crop.x / category.crop.width) * 100}%`;
-    cropImage.style.top = `${(-category.crop.y / category.crop.height) * 100}%`;
+    cropImage.style.width = `${(MOBILE_IMAGE_WIDTH / category.mobileCrop.width) * 100}%`;
+    cropImage.style.left = `${(-category.mobileCrop.x / category.mobileCrop.width) * 100}%`;
+    cropImage.style.top = `${(-category.mobileCrop.y / category.mobileCrop.height) * 100}%`;
 
-    const categoryCoins = coins.filter((coin) => coin.category === category.label);
+    const categoryCoins = coins.filter((coin) => coin.categoryKey === category.key);
     const coinLayer = document.createElement("div");
     coinLayer.className = "scratch-layer";
     coinLayer.setAttribute("aria-label", `${category.label} scratchable book markers`);
-    coinLayer.append(...categoryCoins.map((coin) => createCoinElement(coin, category.crop)));
+    coinLayer.append(...categoryCoins.map((coin) => createCoinElement(coin, mobileCropFrame(category.mobileCrop))));
 
     crop.append(cropImage, coinLayer);
     card.append(heading, crop);
@@ -233,17 +242,24 @@ function renderMobileCategories() {
   mobileBoard.replaceChildren(...cards);
 }
 
-function createCoinElement(coin, crop = null) {
+function createCoinElement(coin, frame = null) {
   const zone = document.createElement("div");
-  const diameter = coin.r * 2;
+  const radius = frame?.radius ?? coin.r;
+  const diameter = radius * 2;
   zone.className = "scratch-zone";
   zone.role = "button";
   zone.tabIndex = 0;
   zone.dataset.coinId = coin.id;
   zone.setAttribute("aria-label", `${coin.title}, ${coin.category}`);
-  const x = crop ? (coin.x - crop.x) / crop.width : coin.x / IMAGE_WIDTH;
-  const y = crop ? (coin.y - crop.y) / crop.height : coin.y / IMAGE_HEIGHT;
-  const d = crop ? diameter / crop.width : diameter / IMAGE_WIDTH;
+  const sourceX = frame?.xKey ? coin[frame.xKey] : coin.x;
+  const sourceY = frame?.yKey ? coin[frame.yKey] : coin.y;
+  const frameX = frame?.x ?? 0;
+  const frameY = frame?.y ?? 0;
+  const frameWidth = frame?.width ?? IMAGE_WIDTH;
+  const frameHeight = frame?.height ?? IMAGE_HEIGHT;
+  const x = (sourceX - frameX) / frameWidth;
+  const y = (sourceY - frameY) / frameHeight;
+  const d = diameter / frameWidth;
   zone.style.setProperty("--x", `${x * 100}%`);
   zone.style.setProperty("--y", `${y * 100}%`);
   zone.style.setProperty("--d", `${d * 100}%`);
@@ -375,6 +391,18 @@ function scrollToCategory(category) {
     left: Math.max(0, Math.min(target, boardShell.scrollWidth - viewportWidth)),
     behavior: "smooth",
   });
+}
+
+function mobileCropFrame(crop) {
+  return {
+    x: crop.x,
+    y: crop.y,
+    width: crop.width,
+    height: crop.height,
+    radius: MOBILE_COIN_RADIUS,
+    xKey: "mobileX",
+    yKey: "mobileY",
+  };
 }
 
 function shortCategoryLabel(label) {
