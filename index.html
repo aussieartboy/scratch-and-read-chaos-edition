@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#24172f">
+    <title>Scratch & Read: Chaos Edition</title>
+    <link rel="icon" href="assets/icon-192.svg" type="image/svg+xml">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="toolbar" aria-label="Tracker controls">
+        <div class="title-block">
+          <h1>Scratch & Read: Chaos Edition</h1>
+          <p id="progressText" aria-live="polite">0 / 24 scratched</p>
+        </div>
+
+        <div class="actions">
+          <button type="button" id="resetButton">Reset</button>
+          <button type="button" id="markAllButton">Mark all as read</button>
+          <button type="button" id="exportButton">Export JSON</button>
+          <label class="import-button">
+            Import JSON
+            <input id="importInput" type="file" accept="application/json,.json">
+          </label>
+        </div>
+      </section>
+
+      <section class="board-shell" aria-label="Interactive scratch board">
+        <div id="board" class="board">
+          <img
+            id="artwork"
+            src="assets/scratch-and-read.jpg"
+            width="1536"
+            height="864"
+            alt="Scratch and Read: Chaos Edition book tracker artwork"
+          >
+          <div id="scratchLayer" class="scratch-layer" aria-label="Scratchable book markers"></div>
+          <div id="missingArtworkNotice" class="missing-artwork" hidden>
+            Add the supplied artwork at <strong>assets/scratch-and-read.jpg</strong>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="app.js" defer></script>
+  </body>
+</html>

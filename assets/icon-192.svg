@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="Scratch and Read icon">
+  <rect width="192" height="192" rx="24" fill="#24172f"/>
+  <circle cx="96" cy="96" r="62" fill="#f2b84b"/>
+  <circle cx="78" cy="72" r="24" fill="#fff0a6" opacity=".65"/>
+  <path d="M61 98l25 25 49-58" fill="none" stroke="#38dce8" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
