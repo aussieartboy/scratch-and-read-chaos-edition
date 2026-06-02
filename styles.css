@@ -28,6 +28,11 @@ body {
   background:
     radial-gradient(circle at 15% 0%, rgba(242, 184, 75, 0.16), transparent 24rem),
     linear-gradient(135deg, #17111f 0%, #251832 55%, #131820 100%);
+  -webkit-text-size-adjust: 100%;
+}
+
+body.is-scratching-board {
+  overscroll-behavior: none;
 }
 
 button,
@@ -159,6 +164,11 @@ h1 {
   width: 100%;
   overflow: auto;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.board-shell.is-scratching {
+  overflow: hidden;
 }
 
 .board {
@@ -180,6 +190,7 @@ h1 {
   object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 .scratch-layer,
@@ -202,7 +213,12 @@ h1 {
   touch-action: none;
   cursor: grab;
   transition: filter 140ms ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
   -webkit-tap-highlight-color: transparent;
+  contain: layout paint;
 }
 
 .scratch-zone:hover {
@@ -212,6 +228,8 @@ h1 {
 
 .scratch-zone.is-scratching {
   cursor: grabbing;
+  filter: none;
+  transition: none;
 }
 
 .scratch-zone.is-complete {
@@ -252,6 +270,11 @@ h1 {
   height: 100%;
   border-radius: inherit;
   filter: drop-shadow(0 0.12rem 0.16rem rgba(55, 32, 8, 0.45));
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
 }
 
 .scratch-zone.is-scratching canvas {
@@ -304,15 +327,15 @@ h1 {
 @media (max-width: 760px) {
   .app-shell {
     width: 100%;
-    padding: 0.45rem;
+    padding: max(0.35rem, env(safe-area-inset-top)) max(0.35rem, env(safe-area-inset-right)) max(0.35rem, env(safe-area-inset-bottom)) max(0.35rem, env(safe-area-inset-left));
   }
 
   .toolbar {
     align-items: stretch;
     flex-direction: column;
-    gap: 0.55rem;
-    margin-bottom: 0.5rem;
-    padding: 0.6rem;
+    gap: 0.45rem;
+    margin-bottom: 0.4rem;
+    padding: 0.48rem;
   }
 
   .actions {
@@ -324,18 +347,18 @@ h1 {
   button,
   .import-button {
     width: 100%;
-    min-height: 2.38rem;
+    min-height: 2.15rem;
     padding-inline: 0.55rem;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     white-space: normal;
   }
 
   h1 {
-    font-size: 1.12rem;
+    font-size: 0.98rem;
   }
 
   #progressText {
-    font-size: 0.9rem;
+    font-size: 0.82rem;
   }
 
   .category-rail {
@@ -349,8 +372,55 @@ h1 {
   }
 
   .board {
-    width: 1120px;
-    min-width: 1120px;
+    width: 1040px;
+    min-width: 1040px;
     scroll-snap-align: start;
+  }
+}
+
+@media (hover: none) {
+  .scratch-zone:hover {
+    filter: none;
+  }
+}
+
+@media (max-width: 760px) and (orientation: landscape),
+  (max-height: 520px) and (orientation: landscape) {
+  .app-shell {
+    padding-block: 0.25rem;
+  }
+
+  .toolbar {
+    display: grid;
+    grid-template-columns: minmax(9rem, 1fr) minmax(18rem, 1.65fr);
+    align-items: center;
+  }
+
+  .actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .category-rail {
+    display: flex;
+  }
+
+  h1 {
+    font-size: 0.92rem;
+  }
+
+  #progressText {
+    font-size: 0.78rem;
+  }
+
+  button,
+  .import-button {
+    min-height: 2rem;
+    font-size: 0.74rem;
+  }
+
+  .board {
+    width: 960px;
+    min-width: 960px;
   }
 }

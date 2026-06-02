@@ -189,10 +189,11 @@ function renderCategoryRail() {
 }
 
 function createCoinElement(coin) {
-  const zone = document.createElement("button");
+  const zone = document.createElement("div");
   const diameter = coin.r * 2;
-  zone.type = "button";
   zone.className = "scratch-zone";
+  zone.role = "button";
+  zone.tabIndex = 0;
   zone.dataset.coinId = coin.id;
   zone.setAttribute("aria-label", `${coin.title}, ${coin.category}`);
   zone.style.setProperty("--x", `${(coin.x / IMAGE_WIDTH) * 100}%`);
@@ -245,6 +246,8 @@ function attachScratchHandlers(zone, canvas, coinId) {
 
     scratch.active = true;
     scratch.moves = 0;
+    document.body.classList.add("is-scratching-board");
+    boardShell?.classList.add("is-scratching");
     zone.classList.add("is-scratching");
     try {
       zone.setPointerCapture(event.pointerId);
@@ -276,12 +279,20 @@ function attachScratchHandlers(zone, canvas, coinId) {
   zone.addEventListener("pointerup", (event) => finishScratch(event, true));
   zone.addEventListener("pointercancel", (event) => finishScratch(event, false));
   zone.addEventListener("lostpointercapture", () => finishScratch(null, true));
+  zone.addEventListener("contextmenu", (event) => event.preventDefault());
+  zone.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    completeCoin(coinId);
+  });
 
   function finishScratch(event, shouldCheck) {
     if (!scratch.active) return;
     scratch.active = false;
     scratch.moves = 0;
     window.clearTimeout(scratch.holdTimer);
+    document.body.classList.remove("is-scratching-board");
+    boardShell?.classList.remove("is-scratching");
     zone.classList.remove("is-scratching");
 
     if (event && zone.hasPointerCapture?.(event.pointerId)) {
