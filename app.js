@@ -17,6 +17,7 @@ const categories = [
     key: "fantasy",
     label: "Fantasy / Badass FMC",
     color: "#a855f7",
+    crop: { x: 14, y: 244, width: 326, height: 306 },
     books: [
       ["bonds-that-tie", "The Bonds That Tie", 49, 353],
       ["kate-daniels", "Kate Daniels", 109, 353],
@@ -29,6 +30,7 @@ const categories = [
     key: "rh",
     label: "RH / Found Family Chaos",
     color: "#ff4aa2",
+    crop: { x: 329, y: 244, width: 314, height: 306 },
     books: [
       ["all-the-pretty-monsters", "All the Pretty Monsters", 369, 353],
       ["ruthless-boys", "Ruthless Boys of the Zodiac", 426, 353],
@@ -41,6 +43,7 @@ const categories = [
     key: "zombie",
     label: "Apocalypse / Zombie Chaos",
     color: "#8bdc42",
+    crop: { x: 631, y: 244, width: 292, height: 306 },
     books: [
       ["zombie-fallout", "Zombie Fallout", 677, 353],
       ["adrians-undead-diary", "Adrian's Undead Diary", 739, 353],
@@ -52,6 +55,7 @@ const categories = [
     key: "monster",
     label: "Supernatural / Monster Hunters",
     color: "#38dce8",
+    crop: { x: 896, y: 244, width: 320, height: 306 },
     books: [
       ["dresden-files", "The Dresden Files", 945, 353],
       ["cal-leandros", "Cal Leandros", 1002, 353],
@@ -64,6 +68,7 @@ const categories = [
     key: "comfort",
     label: "Weird Comfort Chaos",
     color: "#f2b84b",
+    crop: { x: 1200, y: 270, width: 322, height: 282 },
     books: [
       ["murderbot-diaries", "Murderbot Diaries", 1251, 368],
       ["good-omens", "Good Omens", 1310, 368],
@@ -103,6 +108,7 @@ const artwork = document.querySelector("#artwork");
 const missingArtworkNotice = document.querySelector("#missingArtworkNotice");
 const categoryRail = document.querySelector("#categoryRail");
 const boardShell = document.querySelector(".board-shell");
+const mobileBoard = document.querySelector("#mobileBoard");
 
 const state = {
   completed: new Set(loadProgress()),
@@ -168,27 +174,66 @@ importInput.addEventListener("change", async (event) => {
 });
 
 function renderCoins() {
-  scratchLayer.replaceChildren(...coins.map(createCoinElement));
+  scratchLayer.replaceChildren(...coins.map((coin) => createCoinElement(coin)));
+  renderMobileCategories();
 }
 
 function renderCategoryRail() {
   if (!categoryRail) return;
 
   const buttons = categories.map((category) => {
-    const firstBook = category.books[0];
     const button = document.createElement("button");
     button.type = "button";
     button.className = "category-jump";
     button.textContent = shortCategoryLabel(category.label);
     button.style.setProperty("--category-color", category.color);
-    button.addEventListener("click", () => scrollToCategory(firstBook[2]));
+    button.addEventListener("click", () => scrollToCategory(category));
     return button;
   });
 
   categoryRail.replaceChildren(...buttons);
 }
 
-function createCoinElement(coin) {
+function renderMobileCategories() {
+  if (!mobileBoard) return;
+
+  const cards = categories.map((category) => {
+    const card = document.createElement("article");
+    card.className = "mobile-category-card";
+    card.dataset.mobileCategory = category.key;
+    card.style.setProperty("--category-color", category.color);
+
+    const heading = document.createElement("h2");
+    heading.textContent = category.label;
+
+    const crop = document.createElement("div");
+    crop.className = "mobile-crop";
+    crop.style.aspectRatio = `${category.crop.width} / ${category.crop.height}`;
+
+    const cropImage = document.createElement("img");
+    cropImage.src = "assets/scratch-and-read.jpg";
+    cropImage.alt = "";
+    cropImage.setAttribute("aria-hidden", "true");
+    cropImage.draggable = false;
+    cropImage.style.width = `${(IMAGE_WIDTH / category.crop.width) * 100}%`;
+    cropImage.style.left = `${(-category.crop.x / category.crop.width) * 100}%`;
+    cropImage.style.top = `${(-category.crop.y / category.crop.height) * 100}%`;
+
+    const categoryCoins = coins.filter((coin) => coin.category === category.label);
+    const coinLayer = document.createElement("div");
+    coinLayer.className = "scratch-layer";
+    coinLayer.setAttribute("aria-label", `${category.label} scratchable book markers`);
+    coinLayer.append(...categoryCoins.map((coin) => createCoinElement(coin, category.crop)));
+
+    crop.append(cropImage, coinLayer);
+    card.append(heading, crop);
+    return card;
+  });
+
+  mobileBoard.replaceChildren(...cards);
+}
+
+function createCoinElement(coin, crop = null) {
   const zone = document.createElement("div");
   const diameter = coin.r * 2;
   zone.className = "scratch-zone";
@@ -196,9 +241,12 @@ function createCoinElement(coin) {
   zone.tabIndex = 0;
   zone.dataset.coinId = coin.id;
   zone.setAttribute("aria-label", `${coin.title}, ${coin.category}`);
-  zone.style.setProperty("--x", `${(coin.x / IMAGE_WIDTH) * 100}%`);
-  zone.style.setProperty("--y", `${(coin.y / IMAGE_HEIGHT) * 100}%`);
-  zone.style.setProperty("--d", `${(diameter / IMAGE_WIDTH) * 100}%`);
+  const x = crop ? (coin.x - crop.x) / crop.width : coin.x / IMAGE_WIDTH;
+  const y = crop ? (coin.y - crop.y) / crop.height : coin.y / IMAGE_HEIGHT;
+  const d = crop ? diameter / crop.width : diameter / IMAGE_WIDTH;
+  zone.style.setProperty("--x", `${x * 100}%`);
+  zone.style.setProperty("--y", `${y * 100}%`);
+  zone.style.setProperty("--d", `${d * 100}%`);
   zone.style.setProperty("--tick-color", coin.color);
   if (coin.synthetic) {
     zone.title = "Synthetic estimated coin for Dungeon Crawler Carl";
@@ -210,8 +258,8 @@ function createCoinElement(coin) {
   tick.textContent = "✓";
 
   const canvas = document.createElement("canvas");
-  canvas.width = 112;
-  canvas.height = 112;
+  canvas.width = 160;
+  canvas.height = 160;
 
   zone.append(tick, canvas);
   attachScratchHandlers(zone, canvas, coin.id);
@@ -309,11 +357,18 @@ function attachScratchHandlers(zone, canvas, coinId) {
   }
 }
 
-function scrollToCategory(sourceX) {
+function scrollToCategory(category) {
+  const mobileCard = document.querySelector(`[data-mobile-category="${category.key}"]`);
+  if (mobileCard && getComputedStyle(mobileCard).display !== "none") {
+    mobileCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
+
   if (!boardShell) return;
 
   const boardWidth = boardShell.scrollWidth;
   const viewportWidth = boardShell.clientWidth;
+  const sourceX = category.books[0][2];
   const target = (sourceX / IMAGE_WIDTH) * boardWidth - viewportWidth * 0.18;
 
   boardShell.scrollTo({
@@ -438,11 +493,10 @@ function getScratchRatio(context, canvas) {
 
 function completeCoin(coinId) {
   state.completed.add(coinId);
-  const zone = document.querySelector(`[data-coin-id="${coinId}"]`);
-  if (zone) {
+  document.querySelectorAll(`[data-coin-id="${coinId}"]`).forEach((zone) => {
     zone.classList.remove("is-scratching");
     zone.classList.add("is-complete");
-  }
+  });
   saveProgress();
   updateProgressText();
 }
