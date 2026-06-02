@@ -101,6 +101,8 @@ const exportButton = document.querySelector("#exportButton");
 const importInput = document.querySelector("#importInput");
 const artwork = document.querySelector("#artwork");
 const missingArtworkNotice = document.querySelector("#missingArtworkNotice");
+const categoryRail = document.querySelector("#categoryRail");
+const boardShell = document.querySelector(".board-shell");
 
 const state = {
   completed: new Set(loadProgress()),
@@ -111,6 +113,7 @@ artwork.addEventListener("error", () => {
 });
 
 renderCoins();
+renderCategoryRail();
 updateProgressText();
 registerServiceWorker();
 
@@ -166,6 +169,23 @@ importInput.addEventListener("change", async (event) => {
 
 function renderCoins() {
   scratchLayer.replaceChildren(...coins.map(createCoinElement));
+}
+
+function renderCategoryRail() {
+  if (!categoryRail) return;
+
+  const buttons = categories.map((category) => {
+    const firstBook = category.books[0];
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "category-jump";
+    button.textContent = shortCategoryLabel(category.label);
+    button.style.setProperty("--category-color", category.color);
+    button.addEventListener("click", () => scrollToCategory(firstBook[2]));
+    return button;
+  });
+
+  categoryRail.replaceChildren(...buttons);
 }
 
 function createCoinElement(coin) {
@@ -278,19 +298,55 @@ function attachScratchHandlers(zone, canvas, coinId) {
   }
 }
 
+function scrollToCategory(sourceX) {
+  if (!boardShell) return;
+
+  const boardWidth = boardShell.scrollWidth;
+  const viewportWidth = boardShell.clientWidth;
+  const target = (sourceX / IMAGE_WIDTH) * boardWidth - viewportWidth * 0.18;
+
+  boardShell.scrollTo({
+    left: Math.max(0, Math.min(target, boardShell.scrollWidth - viewportWidth)),
+    behavior: "smooth",
+  });
+}
+
+function shortCategoryLabel(label) {
+  return label
+    .replace("Fantasy / Badass FMC", "Fantasy")
+    .replace("RH / Found Family Chaos", "RH")
+    .replace("Apocalypse / Zombie Chaos", "Zombie")
+    .replace("Supernatural / Monster Hunters", "Monster")
+    .replace("Weird Comfort Chaos", "Comfort");
+}
+
 function scratchAt(event, canvas, context) {
   const rect = canvas.getBoundingClientRect();
   const scaleX = canvas.width / rect.width;
   const scaleY = canvas.height / rect.height;
   const x = (event.clientX - rect.left) * scaleX;
   const y = (event.clientY - rect.top) * scaleY;
-  const brush = canvas.width * 0.18;
+  const brush = canvas.width * 0.16;
 
   context.save();
   context.globalCompositeOperation = "destination-out";
   context.beginPath();
   context.arc(x, y, brush, 0, Math.PI * 2);
   context.fill();
+
+  for (let i = 0; i < 5; i += 1) {
+    const angle = Math.random() * Math.PI * 2;
+    const distance = Math.random() * brush * 1.6;
+    context.beginPath();
+    context.arc(
+      x + Math.cos(angle) * distance,
+      y + Math.sin(angle) * distance,
+      brush * (0.12 + Math.random() * 0.16),
+      0,
+      Math.PI * 2,
+    );
+    context.fill();
+  }
   context.restore();
 }
 
@@ -308,16 +364,17 @@ function drawGoldCover(canvas) {
     width * 0.54,
   );
   gradient.addColorStop(0, "#fff0a6");
-  gradient.addColorStop(0.42, "#e7b833");
-  gradient.addColorStop(1, "#a96f14");
+  gradient.addColorStop(0.35, "#f4cf48");
+  gradient.addColorStop(0.76, "#d49a23");
+  gradient.addColorStop(1, "#8e5a0e");
 
   context.fillStyle = gradient;
   context.beginPath();
   context.arc(width / 2, height / 2, width * 0.48, 0, Math.PI * 2);
   context.fill();
 
-  context.globalAlpha = 0.26;
-  for (let i = 0; i < 520; i += 1) {
+  context.globalAlpha = 0.3;
+  for (let i = 0; i < 620; i += 1) {
     const angle = Math.random() * Math.PI * 2;
     const distance = Math.sqrt(Math.random()) * width * 0.47;
     const x = width / 2 + Math.cos(angle) * distance;
@@ -326,6 +383,18 @@ function drawGoldCover(canvas) {
     context.fillRect(x, y, 1.6, 1.6);
   }
   context.globalAlpha = 1;
+
+  context.save();
+  context.globalAlpha = 0.18;
+  context.strokeStyle = "#fff8cf";
+  context.lineWidth = width * 0.026;
+  for (let x = -width * 0.45; x < width * 1.1; x += width * 0.16) {
+    context.beginPath();
+    context.moveTo(x, height * 0.95);
+    context.lineTo(x + width * 0.62, height * 0.05);
+    context.stroke();
+  }
+  context.restore();
 
   context.strokeStyle = "rgba(255, 246, 184, 0.75)";
   context.lineWidth = width * 0.035;
