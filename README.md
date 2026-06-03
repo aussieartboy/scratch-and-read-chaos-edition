@@ -4,21 +4,21 @@ A free static scratch-card book tracker built with plain HTML, CSS and JavaScrip
 
 ## Artwork
 
-Place the supplied 1536 x 864 artwork image here:
+Place the supplied desktop/browser artwork image here:
 
 ```text
 assets/scratch-and-read.jpg
 ```
 
-The app uses that image as the board background and overlays percentage-positioned scratch zones on the visible gold circles. I identified 24 visible scratch circles in the supplied coordinate list. The Apocalypse / Zombie Chaos category lists five books but appears to show only four visible gold circles, so the app defaults to 24 zones.
+Place the supplied mobile artwork image here:
 
-To add the estimated missing fifth zombie coin, open `app.js` and set:
-
-```js
-const SHOW_SYNTHETIC_MISSING_ZOMBIE_COIN = true;
+```text
+assets/scratch-and-read-mobile.png
 ```
 
-Scratch coordinates live near the top of `app.js`. Edit the `x` and `y` values there if any circle needs a small alignment nudge.
+The app uses the desktop artwork for larger browser views and the mobile artwork for phone views. It overlays percentage-positioned scratch zones on the visible gold circles. The current tracker has 25 scratch zones.
+
+Scratch coordinates live near the top of `app.js`. Edit the desktop `x` and `y` values or the `mobileCoinPositions` values there if any circle needs a small alignment nudge.
 
 ## Run Locally
 
@@ -39,7 +39,7 @@ http://localhost:8080
 ### GitHub Pages
 
 1. Create a GitHub repository.
-2. Add these files, including `assets/scratch-and-read.jpg`.
+2. Add these files, including the `assets` folder.
 3. Commit and push.
 4. In GitHub, open **Settings -> Pages**.
 5. Set the source to the main branch and root folder.

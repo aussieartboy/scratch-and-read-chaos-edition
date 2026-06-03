@@ -99,7 +99,7 @@ button:focus-visible,
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  width: min(100%, 1536px);
+  width: min(100%, 1024px);
   margin: 0 auto 0.75rem;
   padding: 0.8rem;
   border: 1px solid var(--panel-border);
@@ -135,7 +135,7 @@ h1 {
 
 .category-rail {
   display: none;
-  width: min(100%, 1536px);
+  width: min(100%, 1024px);
   margin: 0 auto 0.6rem;
   gap: 0.4rem;
   overflow-x: auto;
@@ -175,10 +175,10 @@ h1 {
 
 .board {
   position: relative;
-  width: min(100%, 1536px);
+  width: min(100%, 1024px);
   min-width: min(100%, 760px);
   margin: 0 auto;
-  aspect-ratio: 1536 / 864;
+  aspect-ratio: 1024 / 1536;
   border-radius: 0.5rem;
   overflow: hidden;
   background: #241b2d;

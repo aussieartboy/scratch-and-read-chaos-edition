@@ -1,17 +1,11 @@
-const IMAGE_WIDTH = 1536;
-const IMAGE_HEIGHT = 864;
-const COIN_RADIUS = 28;
+const IMAGE_WIDTH = 1024;
+const IMAGE_HEIGHT = 1536;
+const COIN_RADIUS = 38;
 const MOBILE_IMAGE_WIDTH = 853;
 const MOBILE_IMAGE_HEIGHT = 1844;
 const MOBILE_COIN_RADIUS = 32;
 const SCRATCH_THRESHOLD = 0.5;
 const STORAGE_KEY = "scratch-and-read-chaos-progress-v1";
-
-// The original artwork appears to show 24 visible gold circles. The
-// Apocalypse / Zombie Chaos section lists five books, but the supplied
-// coordinate set has only four visible circles there. Set this to true to
-// render an estimated fifth synthetic coin for that section.
-const SHOW_SYNTHETIC_MISSING_ZOMBIE_COIN = true;
 
 const mobileCoinPositions = {
   fantasy: [
@@ -52,7 +46,7 @@ const mobileCoinPositions = {
 };
 
 // Adjust scratch zone coordinates here. x/y/r are in pixels relative to the
-// original 1536 x 864 artwork and are converted to percentages at render time.
+// current desktop artwork and are converted to percentages at render time.
 const categories = [
   {
     key: "fantasy",
@@ -60,11 +54,11 @@ const categories = [
     color: "#a855f7",
     mobileCrop: { x: 8, y: 380, width: 407, height: 355 },
     books: [
-      ["bonds-that-tie", "The Bonds That Tie", 49, 353],
-      ["kate-daniels", "Kate Daniels", 109, 353],
-      ["daughter-of-no-worlds", "Daughter of No Worlds", 169, 353],
-      ["age-of-the-andinna", "Age of the Andinna", 228, 353],
-      ["the-fifth-nicnevin", "The Fifth Nicnevin", 287, 353],
+      ["bonds-that-tie", "The Bonds That Tie", 129.2, 391.0],
+      ["kate-daniels", "Kate Daniels", 213.7, 395.1],
+      ["daughter-of-no-worlds", "Daughter of No Worlds", 300.7, 395.7],
+      ["age-of-the-andinna", "Age of the Andinna", 382.9, 395.8],
+      ["the-fifth-nicnevin", "The Fifth Nicnevin", 461.8, 393.9],
     ],
   },
   {
@@ -73,11 +67,11 @@ const categories = [
     color: "#ff4aa2",
     mobileCrop: { x: 427, y: 380, width: 407, height: 355 },
     books: [
-      ["all-the-pretty-monsters", "All the Pretty Monsters", 369, 353],
-      ["ruthless-boys", "Ruthless Boys of the Zodiac", 426, 353],
-      ["kit-davenport", "Kit Davenport", 483, 353],
-      ["curse-of-the-gods", "Curse of the Gods", 541, 353],
-      ["the-dark-side", "The Dark Side", 597, 353],
+      ["all-the-pretty-monsters", "All the Pretty Monsters", 564.6, 394.5],
+      ["ruthless-boys", "Ruthless Boys of the Zodiac", 648.3, 396.6],
+      ["kit-davenport", "Kit Davenport", 735.8, 396.1],
+      ["curse-of-the-gods", "Curse of the Gods", 815.3, 397.6],
+      ["the-dark-side", "The Dark Side", 901.6, 398.5],
     ],
   },
   {
@@ -86,10 +80,11 @@ const categories = [
     color: "#8bdc42",
     mobileCrop: { x: 8, y: 760, width: 407, height: 360 },
     books: [
-      ["zombie-fallout", "Zombie Fallout", 677, 353],
-      ["adrians-undead-diary", "Adrian's Undead Diary", 739, 353],
-      ["mountain-man", "Mountain Man", 800, 353],
-      ["double-dead", "Double Dead", 862, 353],
+      ["zombie-fallout", "Zombie Fallout", 142.1, 713.2],
+      ["adrians-undead-diary", "Adrian's Undead Diary", 218.5, 713.0],
+      ["mountain-man", "Mountain Man", 299.8, 713.9],
+      ["double-dead", "Double Dead", 380.4, 714.0],
+      ["dungeon-crawler-carl", "Dungeon Crawler Carl", 456.7, 713.3],
     ],
   },
   {
@@ -98,11 +93,11 @@ const categories = [
     color: "#38dce8",
     mobileCrop: { x: 427, y: 760, width: 407, height: 360 },
     books: [
-      ["dresden-files", "The Dresden Files", 945, 353],
-      ["cal-leandros", "Cal Leandros", 1002, 353],
-      ["sandman-slim", "Sandman Slim", 1059, 353],
-      ["iron-druid", "Iron Druid Chronicles", 1115, 353],
-      ["monster-hunter-international", "Monster Hunter International", 1171, 353],
+      ["dresden-files", "The Dresden Files", 560.1, 712.6],
+      ["cal-leandros", "Cal Leandros", 643.3, 713.5],
+      ["sandman-slim", "Sandman Slim", 725.8, 713.9],
+      ["iron-druid", "Iron Druid Chronicles", 806.3, 715.7],
+      ["monster-hunter-international", "Monster Hunter International", 889.6, 714.0],
     ],
   },
   {
@@ -111,23 +106,17 @@ const categories = [
     color: "#f2b84b",
     mobileCrop: { x: 8, y: 1138, width: 445, height: 345 },
     books: [
-      ["murderbot-diaries", "Murderbot Diaries", 1251, 368],
-      ["good-omens", "Good Omens", 1310, 368],
-      ["cerulean-sea", "The House in the Cerulean Sea", 1370, 368],
-      ["raven-cycle", "The Raven Cycle", 1429, 368],
-      ["addie-larue", "The Invisible Life of Addie LaRue", 1488, 368],
+      ["murderbot-diaries", "Murderbot Diaries", 145.1, 1035.7],
+      ["good-omens", "Good Omens", 241.1, 1036.4],
+      ["cerulean-sea", "The House in the Cerulean Sea", 336.5, 1037.0],
+      ["raven-cycle", "The Raven Cycle", 436.0, 1036.5],
+      ["addie-larue", "The Invisible Life of Addie LaRue", 537.8, 1035.1],
     ],
   },
 ];
 
-if (SHOW_SYNTHETIC_MISSING_ZOMBIE_COIN) {
-  categories
-    .find((category) => category.key === "zombie")
-    .books.push(["dungeon-crawler-carl", "Dungeon Crawler Carl", 907, 353, true]);
-}
-
 const coins = categories.flatMap((category) =>
-  category.books.map(([id, title, x, y, synthetic = false], index) => {
+  category.books.map(([id, title, x, y], index) => {
     const [mobileX, mobileY] = mobileCoinPositions[category.key][index];
     return {
     id: `${category.key}-${id}`,
@@ -140,7 +129,6 @@ const coins = categories.flatMap((category) =>
     mobileX,
     mobileY,
     r: COIN_RADIUS,
-    synthetic,
     };
   }),
 );
@@ -264,9 +252,6 @@ function createCoinElement(coin, frame = null) {
   zone.style.setProperty("--y", `${y * 100}%`);
   zone.style.setProperty("--d", `${d * 100}%`);
   zone.style.setProperty("--tick-color", coin.color);
-  if (coin.synthetic) {
-    zone.title = "Synthetic estimated coin for Dungeon Crawler Carl";
-  }
 
   const tick = document.createElement("span");
   tick.className = "tick";
