@@ -1,4 +1,4 @@
-const CACHE_NAME = "scratch-and-read-chaos-v10";
+const CACHE_NAME = "scratch-and-read-chaos-v11";
 const APP_SHELL = [
   "./",
   "./index.html",

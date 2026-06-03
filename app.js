@@ -6,6 +6,9 @@ const MOBILE_IMAGE_HEIGHT = 1844;
 const MOBILE_COIN_RADIUS = 32;
 const SCRATCH_THRESHOLD = 0.5;
 const STORAGE_KEY = "scratch-and-read-chaos-progress-v1";
+const SUPABASE_URL = "https://gmthueauidmluipgiapj.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_874uwyvRVcx3nesZYBNvYw_JbhTkXty";
+const SYNC_POLL_INTERVAL_MS = 20000;
 
 const mobileCoinPositions = {
   fantasy: [
@@ -145,6 +148,12 @@ const mobileBoard = document.querySelector("#mobileBoard");
 
 const state = {
   completed: new Set(loadProgress()),
+  syncBoardId: getSyncBoardId(),
+  syncClient: null,
+  syncEnabled: false,
+  syncSaving: false,
+  syncSaveTimer: null,
+  lastCloudSignature: "",
 };
 
 artwork.addEventListener("error", () => {
@@ -154,9 +163,12 @@ artwork.addEventListener("error", () => {
 renderCoins();
 renderCategoryRail();
 updateProgressText();
+initCloudSync();
 registerServiceWorker();
 
 resetButton.addEventListener("click", () => {
+  if (!window.confirm("Reset all scratched books?")) return;
+
   state.completed.clear();
   saveProgress();
   document.querySelectorAll(".scratch-zone").forEach((zone) => {
@@ -505,6 +517,8 @@ function getScratchRatio(context, canvas) {
 }
 
 function completeCoin(coinId) {
+  if (state.completed.has(coinId)) return;
+
   state.completed.add(coinId);
   document.querySelectorAll(`[data-coin-id="${coinId}"]`).forEach((zone) => {
     zone.classList.remove("is-scratching");
@@ -531,6 +545,121 @@ function loadProgress() {
 
 function saveProgress() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify([...state.completed]));
+  queueCloudSave();
+}
+
+function getSyncBoardId() {
+  const fromHash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const fromQuery = new URLSearchParams(window.location.search);
+  const value = fromHash.get("board") || fromHash.get("sync") || fromQuery.get("board") || fromQuery.get("sync");
+
+  if (!value) return "";
+
+  return value.trim().replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 80);
+}
+
+async function initCloudSync() {
+  if (!state.syncBoardId || !SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY || !window.supabase?.createClient) {
+    return;
+  }
+
+  state.syncClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  state.syncEnabled = true;
+
+  await loadCloudProgress();
+
+  window.addEventListener("online", () => queueCloudSave(0));
+  window.addEventListener("focus", () => loadCloudProgress());
+  window.setInterval(() => {
+    if (!document.hidden) loadCloudProgress();
+  }, SYNC_POLL_INTERVAL_MS);
+}
+
+async function loadCloudProgress() {
+  if (!state.syncEnabled || !state.syncClient || state.syncSaving) return;
+
+  try {
+    const { data, error } = await state.syncClient.rpc("get_scratch_progress", {
+      p_board_id: state.syncBoardId,
+    });
+
+    if (error) throw error;
+
+    const cloudIds = normalizeProgressIds(data);
+    const cloudSignature = signatureFor(cloudIds);
+    const localIds = [...state.completed];
+
+    if (cloudIds.length === 0 && localIds.length > 0) {
+      queueCloudSave(0);
+      return;
+    }
+
+    if (cloudSignature !== signatureFor(localIds)) {
+      applyCompletedIds(cloudIds);
+    }
+
+    state.lastCloudSignature = cloudSignature;
+  } catch (error) {
+    console.warn("Cloud sync is unavailable. Local progress is still saved.", error);
+  }
+}
+
+function queueCloudSave(delay = 600) {
+  if (!state.syncEnabled || !state.syncClient) return;
+
+  window.clearTimeout(state.syncSaveTimer);
+  state.syncSaveTimer = window.setTimeout(() => {
+    saveCloudProgress();
+  }, delay);
+}
+
+async function saveCloudProgress() {
+  if (!state.syncEnabled || !state.syncClient || state.syncSaving) return;
+
+  const completedIds = [...state.completed];
+  const signature = signatureFor(completedIds);
+  if (signature === state.lastCloudSignature) return;
+
+  state.syncSaving = true;
+
+  try {
+    const { error } = await state.syncClient.rpc("save_scratch_progress", {
+      p_board_id: state.syncBoardId,
+      p_completed_ids: completedIds,
+    });
+
+    if (error) throw error;
+
+    state.lastCloudSignature = signature;
+  } catch (error) {
+    console.warn("Cloud save failed. Local progress is still saved.", error);
+  } finally {
+    state.syncSaving = false;
+  }
+}
+
+function applyCompletedIds(ids) {
+  state.completed = new Set(normalizeProgressIds(ids));
+
+  document.querySelectorAll(".scratch-zone").forEach((zone) => {
+    const isComplete = state.completed.has(zone.dataset.coinId);
+    zone.classList.toggle("is-complete", isComplete);
+    if (!isComplete) drawGoldCover(zone.querySelector("canvas"));
+  });
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...state.completed]));
+  updateProgressText();
+}
+
+function normalizeProgressIds(ids) {
+  if (!Array.isArray(ids)) return [];
+
+  const validIds = new Set(coins.map((coin) => coin.id));
+  return [...new Set(ids)].filter((id) => validIds.has(id));
+}
+
+function signatureFor(ids) {
+  return normalizeProgressIds(ids).sort().join("|");
 }
 
 function registerServiceWorker() {
