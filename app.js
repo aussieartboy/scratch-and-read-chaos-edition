@@ -9,6 +9,7 @@ const STORAGE_KEY = "scratch-and-read-chaos-progress-v1";
 const SUPABASE_URL = "https://gmthueauidmluipgiapj.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_874uwyvRVcx3nesZYBNvYw_JbhTkXty";
 const SYNC_POLL_INTERVAL_MS = 20000;
+const SYNC_BOARD_ID = getSyncBoardId();
 
 const mobileCoinPositions = {
   fantasy: [
@@ -148,7 +149,7 @@ const mobileBoard = document.querySelector("#mobileBoard");
 
 const state = {
   completed: new Set(loadProgress()),
-  syncBoardId: getSyncBoardId(),
+  syncBoardId: SYNC_BOARD_ID,
   syncClient: null,
   syncEnabled: false,
   syncSaving: false,
@@ -534,7 +535,7 @@ function updateProgressText() {
 
 function loadProgress() {
   try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    const parsed = JSON.parse(localStorage.getItem(getStorageKey()));
     if (!Array.isArray(parsed)) return [];
     const validIds = new Set(coins.map((coin) => coin.id));
     return parsed.filter((id) => validIds.has(id));
@@ -544,8 +545,12 @@ function loadProgress() {
 }
 
 function saveProgress() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...state.completed]));
+  localStorage.setItem(getStorageKey(), JSON.stringify([...state.completed]));
   queueCloudSave();
+}
+
+function getStorageKey() {
+  return SYNC_BOARD_ID ? `${STORAGE_KEY}:${SYNC_BOARD_ID}` : STORAGE_KEY;
 }
 
 function getSyncBoardId() {
@@ -587,14 +592,8 @@ async function loadCloudProgress() {
 
     const cloudIds = normalizeProgressIds(data);
     const cloudSignature = signatureFor(cloudIds);
-    const localIds = [...state.completed];
 
-    if (cloudIds.length === 0 && localIds.length > 0) {
-      queueCloudSave(0);
-      return;
-    }
-
-    if (cloudSignature !== signatureFor(localIds)) {
+    if (cloudSignature !== signatureFor([...state.completed])) {
       applyCompletedIds(cloudIds);
     }
 
@@ -647,7 +646,7 @@ function applyCompletedIds(ids) {
     if (!isComplete) drawGoldCover(zone.querySelector("canvas"));
   });
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([...state.completed]));
+  localStorage.setItem(getStorageKey(), JSON.stringify([...state.completed]));
   updateProgressText();
 }
 
