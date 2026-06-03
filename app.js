@@ -155,6 +155,7 @@ const state = {
   syncSaving: false,
   syncSaveTimer: null,
   lastCloudSignature: "",
+  localRevision: 0,
 };
 
 artwork.addEventListener("error", () => {
@@ -171,7 +172,7 @@ resetButton.addEventListener("click", () => {
   if (!window.confirm("Reset all scratched books?")) return;
 
   state.completed.clear();
-  saveProgress();
+  saveProgress(0);
   document.querySelectorAll(".scratch-zone").forEach((zone) => {
     zone.classList.remove("is-complete");
     drawGoldCover(zone.querySelector("canvas"));
@@ -544,9 +545,10 @@ function loadProgress() {
   }
 }
 
-function saveProgress() {
+function saveProgress(delay = 600) {
+  state.localRevision += 1;
   localStorage.setItem(getStorageKey(), JSON.stringify([...state.completed]));
-  queueCloudSave();
+  queueCloudSave(delay);
 }
 
 function getStorageKey() {
@@ -583,12 +585,15 @@ async function initCloudSync() {
 async function loadCloudProgress() {
   if (!state.syncEnabled || !state.syncClient || state.syncSaving) return;
 
+  const revisionAtStart = state.localRevision;
+
   try {
     const { data, error } = await state.syncClient.rpc("get_scratch_progress", {
       p_board_id: state.syncBoardId,
     });
 
     if (error) throw error;
+    if (revisionAtStart !== state.localRevision) return;
 
     const cloudIds = normalizeProgressIds(data);
     const cloudSignature = signatureFor(cloudIds);
@@ -613,7 +618,11 @@ function queueCloudSave(delay = 600) {
 }
 
 async function saveCloudProgress() {
-  if (!state.syncEnabled || !state.syncClient || state.syncSaving) return;
+  if (!state.syncEnabled || !state.syncClient) return;
+  if (state.syncSaving) {
+    queueCloudSave(250);
+    return;
+  }
 
   const completedIds = [...state.completed];
   const signature = signatureFor(completedIds);
