@@ -18,6 +18,8 @@
 html {
   min-height: 100%;
   background: var(--page-bg);
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body {
@@ -29,6 +31,8 @@ body {
     radial-gradient(circle at 15% 0%, rgba(242, 184, 75, 0.16), transparent 24rem),
     linear-gradient(135deg, #17111f 0%, #251832 55%, #131820 100%);
   -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 body.is-scratching-board {
@@ -91,7 +95,7 @@ button:focus-visible,
 .app-shell {
   width: min(100%, 1680px);
   margin: 0 auto;
-  padding: clamp(0.75rem, 2vw, 1.5rem);
+  padding: clamp(0.75rem, 2vw, 1.5rem) clamp(0.75rem, 2vw, 1.5rem) 3rem;
 }
 
 .toolbar {
@@ -164,9 +168,7 @@ h1 {
 
 .board-shell {
   width: 100%;
-  overflow: auto;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  overflow: visible;
 }
 
 .board-shell.is-scratching {
