@@ -54,11 +54,11 @@ const categories = [
     color: "#a855f7",
     mobileCrop: { x: 8, y: 380, width: 407, height: 355 },
     books: [
-      ["bonds-that-tie", "The Bonds That Tie", 132.5, 387.0],
-      ["kate-daniels", "Kate Daniels", 219.0, 387.5],
-      ["daughter-of-no-worlds", "Daughter of No Worlds", 307.0, 387.5],
-      ["age-of-the-andinna", "Age of the Andinna", 388.0, 388.0],
-      ["the-fifth-nicnevin", "The Fifth Nicnevin", 467.0, 387.5],
+      ["bonds-that-tie", "The Bonds That Tie", 132.4, 387.2],
+      ["kate-daniels", "Kate Daniels", 219.4, 387.3],
+      ["daughter-of-no-worlds", "Daughter of No Worlds", 307.8, 387.6],
+      ["age-of-the-andinna", "Age of the Andinna", 388.5, 387.5],
+      ["the-fifth-nicnevin", "The Fifth Nicnevin", 465.5, 387.3],
     ],
   },
   {
@@ -67,11 +67,11 @@ const categories = [
     color: "#ff4aa2",
     mobileCrop: { x: 427, y: 380, width: 407, height: 355 },
     books: [
-      ["all-the-pretty-monsters", "All the Pretty Monsters", 570.5, 387.0],
-      ["ruthless-boys", "Ruthless Boys of the Zodiac", 656.0, 387.5],
-      ["kit-davenport", "Kit Davenport", 742.0, 387.5],
-      ["curse-of-the-gods", "Curse of the Gods", 822.5, 388.0],
-      ["the-dark-side", "The Dark Side", 909.0, 387.5],
+      ["all-the-pretty-monsters", "All the Pretty Monsters", 571.2, 387.1],
+      ["ruthless-boys", "Ruthless Boys of the Zodiac", 655.6, 387.6],
+      ["kit-davenport", "Kit Davenport", 742.7, 387.5],
+      ["curse-of-the-gods", "Curse of the Gods", 823.9, 387.6],
+      ["the-dark-side", "The Dark Side", 909.5, 387.5],
     ],
   },
   {
@@ -80,11 +80,11 @@ const categories = [
     color: "#8bdc42",
     mobileCrop: { x: 8, y: 760, width: 407, height: 360 },
     books: [
-      ["zombie-fallout", "Zombie Fallout", 148.0, 706.0],
-      ["adrians-undead-diary", "Adrian's Undead Diary", 225.5, 706.0],
-      ["mountain-man", "Mountain Man", 307.5, 706.0],
-      ["double-dead", "Double Dead", 387.0, 706.0],
-      ["dungeon-crawler-carl", "Dungeon Crawler Carl", 464.5, 706.5],
+      ["zombie-fallout", "Zombie Fallout", 149.5, 704.4],
+      ["adrians-undead-diary", "Adrian's Undead Diary", 224.7, 704.3],
+      ["mountain-man", "Mountain Man", 308.9, 704.4],
+      ["double-dead", "Double Dead", 387.3, 704.4],
+      ["dungeon-crawler-carl", "Dungeon Crawler Carl", 462.5, 704.2],
     ],
   },
   {
@@ -93,11 +93,11 @@ const categories = [
     color: "#38dce8",
     mobileCrop: { x: 427, y: 760, width: 407, height: 360 },
     books: [
-      ["dresden-files", "The Dresden Files", 568.0, 706.0],
-      ["cal-leandros", "Cal Leandros", 652.0, 706.0],
-      ["sandman-slim", "Sandman Slim", 734.0, 706.0],
-      ["iron-druid", "Iron Druid Chronicles", 814.5, 706.0],
-      ["monster-hunter-international", "Monster Hunter International", 895.5, 706.0],
+      ["dresden-files", "The Dresden Files", 569.1, 704.3],
+      ["cal-leandros", "Cal Leandros", 650.8, 704.6],
+      ["sandman-slim", "Sandman Slim", 734.9, 704.6],
+      ["iron-druid", "Iron Druid Chronicles", 815.0, 704.5],
+      ["monster-hunter-international", "Monster Hunter International", 895.2, 704.5],
     ],
   },
   {
@@ -106,11 +106,11 @@ const categories = [
     color: "#f2b84b",
     mobileCrop: { x: 8, y: 1138, width: 445, height: 345 },
     books: [
-      ["murderbot-diaries", "Murderbot Diaries", 150.5, 1031.5],
-      ["good-omens", "Good Omens", 247.5, 1031.5],
-      ["cerulean-sea", "The House in the Cerulean Sea", 337.5, 1031.5],
-      ["raven-cycle", "The Raven Cycle", 444.0, 1031.5],
-      ["addie-larue", "The Invisible Life of Addie LaRue", 542.5, 1031.5],
+      ["murderbot-diaries", "Murderbot Diaries", 150.9, 1026.1],
+      ["good-omens", "Good Omens", 247.9, 1026.4],
+      ["cerulean-sea", "The House in the Cerulean Sea", 345.3, 1026.3],
+      ["raven-cycle", "The Raven Cycle", 442.2, 1026.2],
+      ["addie-larue", "The Invisible Life of Addie LaRue", 542.4, 1026.1],
     ],
   },
 ];
@@ -449,13 +449,13 @@ function drawGoldCover(canvas) {
 
   context.fillStyle = gradient;
   context.beginPath();
-  context.arc(width / 2, height / 2, width * 0.48, 0, Math.PI * 2);
+  context.arc(width / 2, height / 2, width * 0.5, 0, Math.PI * 2);
   context.fill();
 
   context.globalAlpha = 0.3;
   for (let i = 0; i < 620; i += 1) {
     const angle = Math.random() * Math.PI * 2;
-    const distance = Math.sqrt(Math.random()) * width * 0.47;
+    const distance = Math.sqrt(Math.random()) * width * 0.49;
     const x = width / 2 + Math.cos(angle) * distance;
     const y = height / 2 + Math.sin(angle) * distance;
     context.fillStyle = Math.random() > 0.5 ? "#fff8cf" : "#7a4d0f";
@@ -478,7 +478,7 @@ function drawGoldCover(canvas) {
   context.strokeStyle = "rgba(255, 246, 184, 0.75)";
   context.lineWidth = width * 0.035;
   context.beginPath();
-  context.arc(width / 2, height / 2, width * 0.44, 0, Math.PI * 2);
+  context.arc(width / 2, height / 2, width * 0.465, 0, Math.PI * 2);
   context.stroke();
 }
 
