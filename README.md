@@ -61,6 +61,6 @@ http://localhost:8080
 - Pointer Events scratching for mouse, touch and stylus.
 - Double tap or tap-and-hold fallback completion.
 - Automatic completion after roughly 50% of a coin is scratched.
-- Progress saved in `localStorage`.
-- Reset, mark all, export JSON and import JSON controls.
+- Progress saved locally by default, or synced through Supabase when the link includes a `board` code.
+- Reset and mark-all controls with confirmation prompts.
 - PWA manifest and service worker for Android Add to Home Screen and offline loading after first visit.

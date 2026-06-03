@@ -181,7 +181,15 @@ resetButton.addEventListener("click", () => {
 });
 
 markAllButton.addEventListener("click", () => {
-  coins.forEach((coin) => completeCoin(coin.id));
+  if (!window.confirm("Mark all books as read?")) return;
+
+  state.completed = new Set(coins.map((coin) => coin.id));
+  document.querySelectorAll(".scratch-zone").forEach((zone) => {
+    zone.classList.remove("is-scratching");
+    zone.classList.add("is-complete");
+  });
+  saveProgress(0);
+  updateProgressText();
 });
 
 function renderCoins() {
@@ -535,6 +543,12 @@ function updateProgressText() {
 }
 
 function loadProgress() {
+  if (SYNC_BOARD_ID && navigator.onLine) return [];
+
+  return loadStoredProgress();
+}
+
+function loadStoredProgress() {
   try {
     const parsed = JSON.parse(localStorage.getItem(getStorageKey()));
     if (!Array.isArray(parsed)) return [];
@@ -604,6 +618,10 @@ async function loadCloudProgress() {
 
     state.lastCloudSignature = cloudSignature;
   } catch (error) {
+    const storedIds = loadStoredProgress();
+    if (state.completed.size === 0 && storedIds.length > 0) {
+      applyCompletedIds(storedIds);
+    }
     console.warn("Cloud sync is unavailable. Local progress is still saved.", error);
   }
 }

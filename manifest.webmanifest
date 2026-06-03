@@ -2,7 +2,7 @@
   "name": "Scratch & Read: Chaos Edition",
   "short_name": "Scratch & Read",
   "description": "A static scratch-card book tracker for chaos reading progress.",
-  "start_url": "./",
+  "start_url": "./?board=errin-chaos-2026-7kP4vQ9sLm2x",
   "scope": "./",
   "display": "standalone",
   "background_color": "#17111f",
